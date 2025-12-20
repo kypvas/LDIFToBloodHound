@@ -41,6 +41,8 @@ When performing Active Directory assessments through restricted network paths (S
 
 From your Linux attack box (through proxychains/SOCKS):
 
+#### Domain Objects (Users, Computers, Groups, OUs, GPOs)
+
 ```bash
 proxychains ldapsearch -x -H ldap://DC_IP -D "user@domain.com" -w 'password' \
   -b "DC=domain,DC=com" \
@@ -49,10 +51,23 @@ proxychains ldapsearch -x -H ldap://DC_IP -D "user@domain.com" -w 'password' \
   "(objectClass=*)" "*" nTSecurityDescriptor > ad_dump.ldif
 ```
 
+#### ADCS Objects (Certificate Templates, CAs, NTAuth Store)
+
+```bash
+proxychains ldapsearch -x -H ldap://DC_IP -D "user@domain.com" -w 'password' \
+  -b "CN=Public Key Services,CN=Services,CN=Configuration,DC=domain,DC=com" \
+  -E pr=10000/noprompt \
+  -E '!1.2.840.113556.1.4.801=::MAMCAQc=' \
+  "(objectClass=*)" "*" nTSecurityDescriptor cACertificate >> ad_dump.ldif
+```
+
+**Note:** Use `>>` to append ADCS objects to the same file.
+
 **Important flags:**
 - `-E pr=10000/noprompt` - Paged results (handles large domains)
 - `-E '!1.2.840.113556.1.4.801=::MAMCAQc='` - SD_FLAGS control to retrieve security descriptors
 - `nTSecurityDescriptor` - Explicitly request the ACL attribute
+- `cACertificate` - Required for certificate thumbprint extraction (ADCS only)
 
 ### Step 2: Transfer and Convert
 
