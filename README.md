@@ -32,8 +32,9 @@ When performing Active Directory assessments through restricted network paths (S
 ## Prerequisites
 
 - Windows OS (required for ACL parsing)
-- [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
 - LDIF file with `nTSecurityDescriptor` attribute
+
+**Note:** The published executable is self-contained - no .NET runtime installation required.
 
 ## Quick Start
 
@@ -139,10 +140,12 @@ bloodhound_output/
 ```powershell
 git clone https://github.com/kypvas/LDIFToBloodHound.git
 cd LDIFToBloodHound
-dotnet build -c Release
+dotnet publish -c Release
 ```
 
-Output: `bin/Release/net8.0-windows/win-x64/LDIFToBloodHound.exe`
+Output: `bin/Release/net8.0-windows/win-x64/publish/LDIFToBloodHound.exe`
+
+This creates a **single self-contained executable** (~65MB) that includes all dependencies. No .NET runtime installation required on target machine.
 
 ## How It Works
 
