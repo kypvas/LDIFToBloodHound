@@ -25,6 +25,7 @@ When performing Active Directory assessments through restricted network paths (S
 | **Binary SD Decoding** | Uses Windows `RawSecurityDescriptor` for accurate parsing |
 | **BloodHound CE v6** | Outputs modern BloodHound format |
 | **All Object Types** | Users, Computers, Groups, Domains, OUs, GPOs, Containers |
+| **ADCS Support** | Enterprise CAs, Root CAs, AIA CAs, NTAuth Stores, Certificate Templates |
 | **Group Memberships** | Resolves member DNs to SIDs |
 | **UAC Flag Parsing** | Delegation, Kerberoastable, AS-REP roastable detection |
 
@@ -88,7 +89,12 @@ bloodhound_output/
 ├── 20231201120000_domains.json
 ├── 20231201120000_ous.json
 ├── 20231201120000_gpos.json
-└── 20231201120000_containers.json
+├── 20231201120000_containers.json
+├── 20231201120000_certtemplates.json
+├── 20231201120000_enterprisecas.json
+├── 20231201120000_rootcas.json
+├── 20231201120000_aiacas.json
+└── 20231201120000_ntauthstores.json
 ```
 
 ## ACL Rights Extracted
@@ -108,11 +114,15 @@ bloodhound_output/
 | **AddSelf** | Add self to group |
 | **AddKeyCredentialLink** | Shadow Credentials attack |
 | **WriteSPN** | Targeted Kerberoasting |
+| **Enroll** | Certificate enrollment rights |
+| **AutoEnroll** | Automatic certificate enrollment |
+| **ManageCA** | CA management rights |
+| **ManageCertificates** | Certificate management rights |
 
 ## Building from Source
 
 ```powershell
-git clone https://github.com/yourusername/LDIFToBloodHound.git
+git clone https://github.com/kypvas/LDIFToBloodHound.git
 cd LDIFToBloodHound
 dotnet build -c Release
 ```
@@ -143,9 +153,28 @@ Output: `bin/Release/net8.0-windows/win-x64/LDIFToBloodHound.exe`
 ├─────────────────────────────────────────────────────────────────┤
 │  4. Output BloodHound v6 JSON                                   │
 │     └─ Users, Computers, Groups, Domains, OUs, GPOs, Containers │
+│     └─ ADCS: CertTemplates, EnterpriseCAs, RootCAs, AIACAs      │
 │     └─ Full ACE arrays for attack path analysis                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+## ADCS Support
+
+The tool fully supports Active Directory Certificate Services (ADCS) objects for ESC attack path analysis:
+
+| Object Type | Description | Key Properties |
+|-------------|-------------|----------------|
+| **Certificate Templates** | PKI certificate templates | EKUs, enrollment flags, name flags, schema version |
+| **Enterprise CAs** | Issuing certificate authorities | Enabled templates, hosting computer, CA security |
+| **Root CAs** | Root certificate authorities | Certificate chain, thumbprints |
+| **AIA CAs** | Authority Information Access CAs | Cross-certificate pairs, cert chain |
+| **NTAuth Stores** | NTAuth certificate store | Trusted CA thumbprints |
+
+### ADCS Properties Parsed
+
+- **Certificate Templates**: `enrolleesuppliessubject`, `nosecurityextension`, `authenticationenabled`, `requiresmanagerapproval`, EKUs
+- **Enterprise CAs**: `HostingComputer`, `CARegistryData`, `EnabledCertTemplates`, certificate thumbprints
+- **All ADCS Objects**: Full ACL parsing including Enroll, AutoEnroll, ManageCA rights
 
 ## Use Cases
 
